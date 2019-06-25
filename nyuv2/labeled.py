@@ -17,6 +17,11 @@ class LabeledDataset:
         self.file = h5py.File(path)
         self.color_maps = self.file['images']
         self.depth_maps = self.file['depths']
+        self.label_maps = self.file['labels']
+
+        self.scene_types = self.file['sceneTypes'][0]
+        self.scene_names = self.file['scenes'][0]
+        self.label_names = None
 
     def close(self):
         """Closes the HDF5 file from which the dataset is read."""
@@ -35,4 +40,30 @@ class LabeledDataset:
         depth_image = Image.fromarray(depth_map, mode='F')
         depth_image = rotate_image(depth_image)
 
-        return color_image, depth_image
+        label_map = self.label_maps[idx]
+        label_image = Image.fromarray(np.uint8(label_map))
+        label_image = rotate_image(label_image)
+
+        raw_scene_type = self.file[self.scene_types[idx]]
+        scene_type = ''.join([chr(ch[0]) for ch in raw_scene_type])
+
+        raw_scene_name = self.file[self.scene_names[idx]]
+        scene_name = ''.join([chr(ch[0]) for ch in raw_scene_name])
+
+        return color_image, depth_image, label_image, scene_type, scene_name
+
+    def get_label_names(self):
+        if not self.label_names:
+            label_name_maps = self.file['names'][0]
+            label_names = ['unlabeled']
+            for name in label_name_maps:
+                name = ''.join([chr(ch[0]) for ch in self.file[name]])
+                label_names.append(name)
+            self.label_names = label_names
+        return self.label_names
+
+    def get_scene_names(self):
+        return self.scene_names
+
+    def get_scene_types(self):
+        return self.scene_types
