@@ -21,18 +21,29 @@ def plot_depth(ax, depth, title="Depth"):
     ax.set_title(title)
     ax.imshow(depth, cmap='Spectral')
 
+def plot_label(ax, label, title="Label"):
+    """Displays a label map from the NYU dataset."""
+
+    ax.axis('off')
+    ax.set_title(title)
+    ax.imshow(label)
+
 def test_labeled_dataset():
+    image_index = 0
+
     labeled = LabeledDataset(DATASET_DIR / 'nyu_depth_v2_labeled.mat')
+    color, depth, label, scene_type, scene_name = labeled[image_index]
 
-    color, depth = labeled[42]
+    fig = plt.figure('No. %d %s, %s' % (image_index, scene_type, scene_name), figsize=(12, 5))
 
-    fig = plt.figure("Labeled Dataset Sample", figsize=(12, 5))
-
-    ax = fig.add_subplot(1, 2, 1)
+    ax = fig.add_subplot(1, 3, 1)
     plot_color(ax, color)
 
-    ax = fig.add_subplot(1, 2, 2)
+    ax = fig.add_subplot(1, 3, 2)
     plot_depth(ax, depth)
+
+    ax = fig.add_subplot(1, 3, 3)
+    plot_label(ax, label)
 
     plt.show()
 
@@ -40,7 +51,10 @@ def test_labeled_dataset():
 
 def test_raw_dataset():
     # Pick the first raw dataset part we find
-    raw_archive_path = next(DATASET_DIR.glob('*.zip'))
+    try:
+        raw_archive_path = next(DATASET_DIR.glob('*.zip'))
+    except:
+        return
 
     raw_archive = RawDatasetArchive(raw_archive_path)
     frame = raw_archive[5]
